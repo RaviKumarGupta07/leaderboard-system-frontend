@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Leaderboard from "../components/Leaderboard";
+import History from "../components/History";
+import TopThreeCard from "../components/TopThreeCard";
 
 const API = "http://localhost:5000/api";
 const USERS_PER_PAGE = 5;
@@ -18,9 +21,6 @@ export default function Home() {
       setUsers(res.data);
       if (!selectedId && res.data.length) setSelectedId(res.data[0]._id);
     });
-  }, [refresh]);
-
-  useEffect(() => {
     axios.get(`${API}/history`).then((res) => setHistory(res.data));
   }, [refresh]);
 
@@ -48,6 +48,9 @@ export default function Home() {
   const sortedUsers = users.slice().sort((a, b) => b.totalPoints - a.totalPoints);
   const paginatedUsers = sortedUsers.slice((userPage - 1) * USERS_PER_PAGE, userPage * USERS_PER_PAGE);
   const paginatedHistory = history.slice((historyPage - 1) * HISTORY_PER_PAGE, historyPage * HISTORY_PER_PAGE);
+  const topThree = [...users]
+  .sort((a, b) => b.totalPoints - a.totalPoints)
+  .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
@@ -92,83 +95,31 @@ export default function Home() {
             Add
           </button>
         </form>
+        <h2 className="text-xl font-semibold mb-2 text-center">Leaderboard</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                {topThree.map((user, idx) => (
+                  <TopThreeCard key={user._id} user={user} rank={idx + 1} />
+                ))}
+              </div>
 
-        {/* Leaderboard */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-2">Leaderboard</h2>
-          <ul className="space-y-2">
-            {paginatedUsers.map((u, i) => (
-              <li
-                key={u._id}
-                className="flex justify-between p-3 bg-gray-50 rounded text-sm sm:text-base"
-              >
-                <span className="flex items-center gap-2">
-  <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-    {u.name.charAt(0).toUpperCase()}
-  </div>
-  <span>
-    {i + 1 + (userPage - 1) * USERS_PER_PAGE}. {u.name}
-  </span>
-</span>
-                <span className="font-medium">{u.totalPoints} pts</span>
-              </li>
-            ))}
-          </ul>
-          <Pagination
-            currentPage={userPage}
-            total={sortedUsers.length}
-            perPage={USERS_PER_PAGE}
-            onChange={setUserPage}
-          />
-        </div>
+        {/* Leaderboard Component */}
+        <Leaderboard
+          users={paginatedUsers}
+          currentPage={userPage}
+          total={sortedUsers.length}
+          perPage={USERS_PER_PAGE}
+          onPageChange={setUserPage}
+        />
 
-        {/* Claim History */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-2">Claim History</h2>
-          <ul className="space-y-2 max-h-64 overflow-y-auto">
-            {paginatedHistory.map((h) => (
-              <li
-                key={h._id}
-                className="flex justify-between text-sm text-gray-600"
-              >
-                <span>
-                  {new Date(h.claimedAt).toLocaleTimeString()} — {h.userId.name} +{h.points} pts
-                </span>
-              </li>
-            ))}
-          </ul>
-          <Pagination
-            currentPage={historyPage}
-            total={history.length}
-            perPage={HISTORY_PER_PAGE}
-            onChange={setHistoryPage}
-          />
-        </div>
+        {/* History Component */}
+        <History
+          history={paginatedHistory}
+          currentPage={historyPage}
+          total={history.length}
+          perPage={HISTORY_PER_PAGE}
+          onPageChange={setHistoryPage}
+        />
       </div>
-    </div>
-  );
-}
-
-// Reusable Pagination Component
-function Pagination({ currentPage, total, perPage, onChange }) {
-  const totalPages = Math.ceil(total / perPage);
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="flex justify-center mt-3 gap-2">
-      {Array.from({ length: totalPages }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => onChange(i + 1)}
-          className={`px-3 py-1 rounded ${
-            currentPage === i + 1
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          {i + 1}
-        </button>
-      ))}
     </div>
   );
 }
