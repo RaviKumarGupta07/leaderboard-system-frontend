@@ -7,7 +7,8 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
 
-const API = "http://localhost:5000/api";
+// const API = "http://localhost:5000/api";
+const API = "https://leaderboard-system-backend-ushc.onrender.com/api";
 const USERS_PER_PAGE = 5;
 const HISTORY_PER_PAGE = 6;
 
